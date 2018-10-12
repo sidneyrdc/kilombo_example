@@ -1,0 +1,7 @@
+*.swp
+/test
+/test.o
+*.o
+/endstate.json
+*.hex
+*.elf
