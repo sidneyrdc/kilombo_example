@@ -8,7 +8,7 @@ TARGET = main
 
 ifeq ($(TARGET), main)
 	#list of c files in this project
-	SOURCES = util.c communication.c main.c
+	SOURCES = main.c
 
 	#name of the executable file
 	EXECUTABLE = main
