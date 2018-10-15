@@ -1,7 +1,7 @@
 /* Main code to programming on Kilombo Simulator
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Oct 13 00:29:33
+ * Last Change: 2018 Oct 15 00:50:26
  */
 
 #include <kilombo.h>
@@ -36,7 +36,7 @@ typedef struct {
 typedef struct {
     neighbor_t neighbors[MAXN];
     uint8_t n_neighbors;
-    uint8_t new_message;
+    char new_message;
     char message_lock;
     message_t transmit_msg;
     received_message_t received_msg[MAXMSG];
@@ -115,21 +115,23 @@ void process_message() {
 
 // callback for message reception. This callback is triggered every time a message
 // is successfully decoded
-void message_rx(message_t *m, distance_measurement_t *d) {
+void message_rx(message_t *msg, distance_measurement_t *d) {
+    // set new message indicator as true
     mydata->new_message = 1;
 
     // increase the number of received messages
     mydata->n_messages = mydata->n_messages < MAXMSG-1 ? mydata->n_messages + 1 : 1;
 
     // store received message
-    mydata->received_msg[mydata->n_messages-1].msg = *m;
+    mydata->received_msg[mydata->n_messages-1].msg = *msg;
     mydata->received_msg[mydata->n_messages-1].dist = estimate_distance(d);
 }
 
 // callback for message transmission. This callback is triggered every time a
 // message is scheduled for transmission (roughly twice every second)
 message_t *message_tx() {
-    if (mydata->message_lock) return 0;
+    // if the message is being built, don't send it
+    if(mydata->message_lock) return 0;
 
     return &mydata->transmit_msg;
 }
@@ -153,7 +155,7 @@ char *botinfo() {
     str_len = sprintf(str_p, "N=[");
     str_p += str_len;
 
-    // show the neighbours and their distance to the current robot
+    // show the neighbours and their distances to the current robot
     for(size_t j = 0; j < mydata->n_neighbors; j++) {
         if(j + 1 < mydata->n_neighbors) str_len = sprintf(str_p, "%d:%d,", mydata->neighbors[j].id, mydata->neighbors[j].dist);
         else str_len = sprintf(str_p, "%d:%d", mydata->neighbors[j].id, mydata->neighbors[j].dist);
@@ -165,7 +167,7 @@ char *botinfo() {
     pose_t pose = get_pose();
 
     // show the robot coordinates on Cartesian space
-    str_len = sprintf(str_p, "] pose=[x:%.2f,y:%.2f,yaw:%.2f]\nlight=%d", pose.x, pose.y, pose.yaw*180/PI, get_ambientlight());
+    str_len = sprintf(str_p, "] pose=[x:%.2f,y:%.2f,yaw:%.2f] light=%d", pose.x, pose.y, pose.yaw*180/PI, get_ambientlight());
     str_p += str_len;
 
     return botinfo_buffer;
