@@ -1,7 +1,9 @@
-/* Test to Kilombo functions <Implementation>
+/* Traffic Jam example for Kilombo Simulador
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Sep 07 22:08:19
+ * Last Change: 2018 Out 15 18:44:32
+ * Info: Simulates a traffic jam with kilobots changing their velocities while
+ * they are circulating a stationary robot.
  */
 
 #include "communication.h"
@@ -85,9 +87,6 @@ void loop() {
         }
     }
 
-    // search for a light source
-    /*goto_light();*/
-
     // compute the gradient value
     compute_gradient();
     set_color(colors[mydata->gradient%10]);
@@ -145,20 +144,6 @@ char *botinfo() {
 
     return botinfo_buffer;
 }
-
-// calculates light levels from x, y coordinates and calculate the light intensity
-// in its neighbourhood according with the light radius and the robot's current
-// distance to that
-int16_t callback_lighting(double x, double y) {
-    double light_x = 1;
-    double light_y = 1;
-    double light_radius = 1000;
-    double light_dist = norm(x-light_x, y-light_y);
-
-    if(light_dist <= light_radius) return (1 - light_dist/light_radius)*1023;
-
-    return 0;
-}
 #endif
 
 // main function
@@ -174,11 +159,6 @@ int main(void) {
     // register a callback function to return a string describing the internal
     // state of the current bot, used for the simulator status bar
     SET_CALLBACK(botinfo, botinfo);
-
-    // register a callback function to set the position of the light spot in
-    // the map and calculate the light intensity in its neighbourhood according
-    // with the light radius and the robot's current distance to that
-    SET_CALLBACK(lighting, callback_lighting);
 
     // start kilobot event loop
     kilo_start(setup, loop);

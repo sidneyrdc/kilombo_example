@@ -1,7 +1,8 @@
-/* Test to Kilombo functions <Implementation>
+/* Gotolight example for Kilombo Simulator
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Sep 26 12:41:24
+ * Last Change: 2018 Out 15 18:47:12
+ * Info: Simulates kilobots searching for light (they move towards the light source).
  */
 
 #include "communication.h"
@@ -50,7 +51,7 @@ void setup() {
 // primitive behaviour for light search
 void gotolight() {
     // maximum light level
-    int16_t max_light = 155;
+    int16_t max_light = 154;
 
     // how much of the robot history to look at
     int8_t look_after = HIST-1;
@@ -102,7 +103,6 @@ void loop() {
 
     // search for a light source
     gotolight();
-    /*printf("light=%d\n", sample_light());*/
 
     // compute the gradient value
     compute_gradient();
@@ -185,7 +185,6 @@ int main(void) {
 #ifdef DEBUG
     // setup debugging, i.e. printf to serial port, in real Kilobot
     debug_init();
-    printf("debug ativado\n");
 #endif
 
     // register a callback function to return a string describing the internal

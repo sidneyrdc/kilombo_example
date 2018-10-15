@@ -6,18 +6,24 @@
 # source code target
 TARGET = main
 
-ifeq ($(TARGET), main)
+# define the source files and the executable according to the TARGET
+ifneq ($(TARGET), main)
+	ifneq ($(filter $(TARGET), gotolight traffic_jam),)
+		#list of c files in this project
+		SOURCES = util.c communication.c ./examples/$(TARGET).c
+	else
+		#list of c files in this project
+		SOURCES = ./examples/$(TARGET).c
+	endif
+
+	#name of the executable file
+	EXECUTABLE = ./examples/$(TARGET)
+else
 	#list of c files in this project
 	SOURCES = main.c
 
 	#name of the executable file
 	EXECUTABLE = main
-else
-	#list of c files in this project
-	SOURCES = util.c communication.c ./examples/$(TARGET).c
-
-	#name of the executable file
-	EXECUTABLE = ./examples/$(TARGET)
 endif
 
 # Path to the official kilolib, used for real bots only

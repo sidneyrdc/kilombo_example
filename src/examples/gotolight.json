@@ -1,7 +1,7 @@
 {
-    "botName": "test",
+    "botName": "Gotolight",
     "randSeed": 1,
-    "nBots": 2,
+    "nBots": 3,
     "formation": "line",
     "timeStep": 0.0416666,
     "simulationTime": 0,
@@ -20,7 +20,7 @@
     "imageName": "./movie/f%04d.bmp",
     "saveVideo":  0,
     "saveVideoN": 1,
-    "stepsPerFrame": 1,
+    "stepsPerFrame": 34,
     "finalImage": null,
     "stateFileName": "simstates.json",
     "stateFileSteps": 0,
