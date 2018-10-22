@@ -1,7 +1,7 @@
 /* Gradient Example for Kilombo Simulator
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Out 15 18:48:06
+ * Last Change: 2018 Oct 22 01:29:35
  * Info: Simulate kilobots changing their colors according to their distance to
  * the source robot (the one with id=0).
  */
@@ -20,6 +20,8 @@
 #define MAXMSG 10                      // maximum number of stored messages
 #define PI 3.14159265358979323846      // definition for π
 
+#define SEED_ID 0                      // the ID of the source bot
+
 // neighbor datatype
 typedef struct {
     uint16_t id;
@@ -29,7 +31,7 @@ typedef struct {
     uint16_t gradient;
 } neighbor_t;
 
-// rainbow colors
+// colors array
 const uint8_t colors[] = {
     RGB(0, 0, 0),  //0 - off
     RGB(2, 0, 0),  //1 - red
@@ -74,11 +76,16 @@ void setup_message() {
     // don't transmit while we are forming the message
     mydata->message_lock = 1;
     mydata->transmit_msg.type = NORMAL;
+
+    // ------------------------------------------------------------------------
+    // put the data to be send below (limited to 9 bytes)
+    // ------------------------------------------------------------------------
     mydata->transmit_msg.data[0] = kilo_uid & 0xff;            // 0 low  id
     mydata->transmit_msg.data[1] = kilo_uid >> 8;              // 1 high id
     mydata->transmit_msg.data[2] = mydata->n_neighbors;        // 2 number of neighbors
     mydata->transmit_msg.data[3] = mydata->gradient&0xFF;      // 4 low  byte of gradient value
     mydata->transmit_msg.data[4] = (mydata->gradient>>8)&0xFF; // 5 high byte of gradient value
+    // ------------------------------------------------------------------------
 
     mydata->transmit_msg.crc = message_crc(&mydata->transmit_msg);
     mydata->message_lock = 0;
@@ -110,12 +117,15 @@ void process_message() {
             if(mydata->n_neighbors < MAXN-1) mydata->n_neighbors++;
         }
 
-        // i now points to where this message should be stored
+        // --------------------------------------------------------------------
+        // extract the received data below (limited to 9 bytes)
+        // --------------------------------------------------------------------
         mydata->neighbors[i].id = id;
         mydata->neighbors[i].timestamp = kilo_ticks;
         mydata->neighbors[i].dist = mydata->received_msg[mydata->n_messages-1].dist;
         mydata->neighbors[i].n_neighbors = data[2];
         mydata->neighbors[i].gradient = data[3] | data[4]<<8;
+        // --------------------------------------------------------------------
 
         // decrease the number of received messages
         mydata->n_messages--;
@@ -207,14 +217,14 @@ char *botinfo() {
  * Put your personal code in the functions bellow.
  *****************************************************************************/
 
-// primitive behaviour gradient formation
+// primitive behavior gradient formation
 void compute_gradient() {
     uint8_t i;
     uint16_t min = UINT16_MAX-1;
 
     // if the current robot is the leader (id=0), then set the minimum value as zero
-    if(kilo_uid == 0) {
-        min = 0;
+    if(kilo_uid == SEED_ID) {
+        min = -1;
 
     } else {
         // search for the lower gradient value from all its current neighbours
@@ -244,11 +254,6 @@ void setup() {
 
 // put your main code here, will be run repeatedly
 void loop() {
-    // change the leader color to red
-    if(kilo_uid == 0) {
-        set_color(RGB(3, 0, 0));
-    }
-
     // build message
     setup_message();
 
