@@ -1,7 +1,7 @@
 /* Main code to programming on Kilombo Simulator
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Oct 15 00:50:26
+ * Last Change: 2018 Oct 22 10:00:00
  */
 
 #include <kilombo.h>
@@ -52,9 +52,14 @@ void setup_message() {
     // don't transmit while we are forming the message
     mydata->message_lock = 1;
     mydata->transmit_msg.type = NORMAL;
+
+    // ------------------------------------------------------------------------
+    // put the data to be send below (limited to 9 bytes)
+    // ------------------------------------------------------------------------
     mydata->transmit_msg.data[0] = kilo_uid & 0xff;            // 0 low  id
     mydata->transmit_msg.data[1] = kilo_uid >> 8;              // 1 high id
     mydata->transmit_msg.data[2] = mydata->n_neighbors;        // 2 number of neighbors
+    // ------------------------------------------------------------------------
 
     mydata->transmit_msg.crc = message_crc(&mydata->transmit_msg);
     mydata->message_lock = 0;
@@ -86,11 +91,14 @@ void process_message() {
             if(mydata->n_neighbors < MAXN-1) mydata->n_neighbors++;
         }
 
-        // i now points to where this message should be stored
+        // --------------------------------------------------------------------
+        // extract the received data below (limited to 9 bytes)
+        // --------------------------------------------------------------------
         mydata->neighbors[i].id = id;
         mydata->neighbors[i].timestamp = kilo_ticks;
         mydata->neighbors[i].dist = mydata->received_msg[mydata->n_messages-1].dist;
         mydata->neighbors[i].n_neighbors = data[2];
+        // --------------------------------------------------------------------
 
         // decrease the number of received messages
         mydata->n_messages--;

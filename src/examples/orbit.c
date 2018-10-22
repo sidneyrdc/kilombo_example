@@ -1,9 +1,9 @@
-/* Gradient Example for Kilombo Simulator
+/* Orbit Example for Kilombo Simulator
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Oct 22 10:00:19
- * Info: Simulate kilobots changing their colors according to their distance to
- * the source robot (the one with id=0).
+ * Last Change: 2018 Oct 22 11:39:56
+ * Info: Simulate one kilobot orbiting one another by keeping a specified distance
+ * between them during its movement.
  */
 
 #include <kilombo.h>
@@ -20,7 +20,9 @@
 #define MAXMSG 10                      // maximum number of stored messages
 #define PI 3.14159265358979323846      // definition for π
 
-#define SEED_ID 0                      // the ID of the source bot
+#define TOO_CLOSE 40                   // minimum distance between the star and the planet
+#define DESIRED_DISTANCE 60            // desired distance between the star and the planet
+#define STAR_ID 0                      // star robot's ID
 
 // neighbor datatype
 typedef struct {
@@ -28,25 +30,7 @@ typedef struct {
     uint8_t dist;
     uint8_t n_neighbors;
     uint32_t timestamp;
-    uint16_t gradient;
 } neighbor_t;
-
-// colors array
-const uint8_t colors[] = {
-    RGB(0, 0, 0),  //0 - off
-    RGB(2, 0, 0),  //1 - red
-    RGB(2, 1, 0),  //2 - orange
-    RGB(2, 2, 0),  //3 - yellow
-    RGB(1, 2, 0),  //4 - yellowish green
-    RGB(0, 2, 0),  //5 - green
-    RGB(0, 1, 1),  //6 - cyan
-    RGB(0, 2, 2),  //7
-    RGB(0, 1, 2),  //8
-    RGB(0, 0, 1),  //9 - blue
-    RGB(1, 0, 1),  //10 - purple
-    RGB(2, 0, 1),  //11
-    RGB(3, 3, 3)   //12  - bright white
-};
 
 // received message type
 typedef struct {
@@ -58,8 +42,6 @@ typedef struct {
 typedef struct {
     neighbor_t neighbors[MAXN];
     uint8_t n_neighbors;
-    uint16_t gradient;
-
     char new_message;
     char message_lock;
     message_t transmit_msg;
@@ -83,8 +65,6 @@ void setup_message() {
     mydata->transmit_msg.data[0] = kilo_uid & 0xff;            // 0 low  id
     mydata->transmit_msg.data[1] = kilo_uid >> 8;              // 1 high id
     mydata->transmit_msg.data[2] = mydata->n_neighbors;        // 2 number of neighbors
-    mydata->transmit_msg.data[3] = mydata->gradient&0xFF;      // 4 low  byte of gradient value
-    mydata->transmit_msg.data[4] = (mydata->gradient>>8)&0xFF; // 5 high byte of gradient value
     // ------------------------------------------------------------------------
 
     mydata->transmit_msg.crc = message_crc(&mydata->transmit_msg);
@@ -124,7 +104,6 @@ void process_message() {
         mydata->neighbors[i].timestamp = kilo_ticks;
         mydata->neighbors[i].dist = mydata->received_msg[mydata->n_messages-1].dist;
         mydata->neighbors[i].n_neighbors = data[2];
-        mydata->neighbors[i].gradient = data[3] | data[4]<<8;
         // --------------------------------------------------------------------
 
         // decrease the number of received messages
@@ -205,10 +184,21 @@ char *botinfo() {
     str_len = sprintf(str_p, "] pose=[x:%.2f,y:%.2f,yaw:%.2f] light=%d", pose.x, pose.y, pose.yaw*180/PI, get_ambientlight());
     str_p += str_len;
 
-    str_len = sprintf(str_p, "\ngradient=%d", mydata->gradient);
-    str_p += str_len;
-
     return botinfo_buffer;
+}
+
+// calculates light levels from x, y coordinates and calculate the light intensity
+// in its neighbourhood according with the light radius and the robot's current
+// distance to that
+int16_t callback_lighting(double x, double y) {
+    double light_x = 1;
+    double light_y = 1;
+    double light_radius = 1000;
+    double light_dist = sqrt(pow(x-light_x, 2) + pow(y-light_y, 2));
+
+    if(light_dist <= light_radius) return (1 - light_dist/light_radius)*1023;
+
+    return 0;
 }
 #endif
 
@@ -217,26 +207,49 @@ char *botinfo() {
  * Put your personal code in the functions bellow.
  *****************************************************************************/
 
-// primitive behavior gradient formation
-void compute_gradient() {
+// compute orbit according to the distance between the planet and the star
+void compute_orbit() {
     uint8_t i;
-    uint16_t min = UINT16_MAX-1;
 
-    // if the current robot is the leader (id=0), then set the minimum value as zero
-    if(kilo_uid == SEED_ID) {
-        min = -1;
+    // if the robot is a planet, compute its movement
+    if(kilo_uid != STAR_ID) {
+
+        // search for the star ID
+        for(i = 0; i < mydata->n_neighbors; i++) {
+            if(mydata->neighbors[i].id == STAR_ID) break;
+        }
+
+        // evaluate the distance to the star
+        if(mydata->neighbors[i].dist < TOO_CLOSE) {
+            // set motion to go forward
+            set_motors(kilo_turn_left, kilo_turn_right);
+
+            // set led color as red
+            set_color(RGB(3, 0, 0));
+
+        // the distance is lower than desired
+        } else if(mydata->neighbors[i].dist < DESIRED_DISTANCE) {
+            // set motion to go left
+            set_motors(kilo_turn_left, 0);
+
+            // set led color as green
+            set_color(RGB(0, 3, 0));
+
+        // the distance is equal or greater than desired
+        } else {
+            // set motion to go right
+            set_motors(0, kilo_turn_right);
+
+            // set led color as blue
+            set_color(RGB(0, 0, 3));
+        }
 
     } else {
-        // search for the lower gradient value from all its current neighbours
-        for(i = 0; i < mydata->n_neighbors; i++) {
-            if(mydata->neighbors[i].gradient < min) min = mydata->neighbors[i].gradient;
-        }
-    }
+        // set its color as black
+        set_color(RGB(0, 0, 0));
 
-    // increase the robot's current gradient value according with the minimum
-    // value of the gradient found
-    if(mydata->gradient != min+1) {
-        mydata->gradient = min+1;
+        // stop the robot
+        set_motors(0, 0);
     }
 }
 
@@ -247,9 +260,6 @@ void setup() {
 
     // set the number of messages to zero
     mydata->n_messages = 0;
-
-    // set initial gradient as zero
-    mydata->gradient = 0;
 }
 
 // put your main code here, will be run repeatedly
@@ -260,11 +270,8 @@ void loop() {
     // process received message
     process_message();
 
-    // compute the gradient level for each robot
-    compute_gradient();
-
-    // set the current color according to the gradient level
-    set_color(colors[mydata->gradient%13]);
+    // compute orbit according with to the robot type
+    compute_orbit();
 }
 
 // main function
@@ -280,6 +287,11 @@ int main(void) {
     // register a callback function to return a string describing the internal
     // state of the current bot, used for the simulator status bar
     SET_CALLBACK(botinfo, botinfo);
+
+    // register a callback function to set the position of the light spot in
+    // the map and calculate the light intensity in its neighbourhood according
+    // with the light radius and the robot's current distance to that
+    SET_CALLBACK(lighting, callback_lighting);
 
     // start kilobot event loop
     kilo_start(setup, loop);
