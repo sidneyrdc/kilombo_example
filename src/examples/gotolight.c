@@ -1,7 +1,7 @@
 /* Gotolight example for Kilombo Simulator
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Out 15 18:47:12
+ * Last Change: 2018 Out 24 18:05:04
  * Info: Simulates kilobots searching for light (they move towards the light source).
  */
 
@@ -51,7 +51,7 @@ void setup() {
 // primitive behaviour for light search
 void gotolight() {
     // maximum light level
-    int16_t max_light = 154;
+    int16_t max_light = 600;
 
     // how much of the robot history to look at
     int8_t look_after = HIST-1;
