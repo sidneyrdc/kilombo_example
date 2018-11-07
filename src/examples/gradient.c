@@ -1,7 +1,7 @@
 /* Gradient Example for Kilombo Simulator
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Oct 22 10:00:19
+ * Last Change: 2018 Nov 07 10:09:59
  * Info: Simulate kilobots changing their colors according to their distance to
  * the source robot (the one with id=0).
  */
@@ -46,6 +46,14 @@ const uint8_t colors[] = {
     RGB(1, 0, 1),  //10 - purple
     RGB(2, 0, 1),  //11
     RGB(3, 3, 3)   //12  - bright white
+};
+
+// 3-colors array
+const uint8_t colors2[] = {
+    RGB(0, 0, 0),   // 0 - off
+    RGB(3, 0, 0),   // 1 - red
+    RGB(0, 3, 0),   // 2 - green
+    RGB(0, 0, 3)   // 3 - blue
 };
 
 // received message type
@@ -264,7 +272,9 @@ void loop() {
     compute_gradient();
 
     // set the current color according to the gradient level
-    set_color(colors[mydata->gradient%13]);
+    set_color(colors2[mydata->gradient%4]);
+
+    printf("%d\n", get_ambientlight());
 }
 
 // main function
@@ -281,14 +291,14 @@ int main(void) {
     // state of the current bot, used for the simulator status bar
     SET_CALLBACK(botinfo, botinfo);
 
-    // start kilobot event loop
-    kilo_start(setup, loop);
-
     // register message callback
     kilo_message_rx = message_rx;
 
     // register message transmission callback
     kilo_message_tx = message_tx;
+
+    // start kilobot event loop
+    kilo_start(setup, loop);
 
     return 0;
 }

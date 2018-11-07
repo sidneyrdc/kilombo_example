@@ -1,7 +1,7 @@
 /* Traffic Jam example for Kilombo Simulador
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Out 15 18:44:32
+ * Last Change: 2018 Nov 07 09:49:16
  * Info: Simulates a traffic jam with kilobots changing their velocities while
  * they are circulating a stationary robot.
  */
@@ -160,9 +160,6 @@ int main(void) {
     // state of the current bot, used for the simulator status bar
     SET_CALLBACK(botinfo, botinfo);
 
-    // start kilobot event loop
-    kilo_start(setup, loop);
-
     // initialize ring buffer
     RB_init();
 
@@ -171,6 +168,9 @@ int main(void) {
 
     // register message transmission callback
     kilo_message_tx = message_tx;
+
+    // start kilobot event loop
+    kilo_start(setup, loop);
 
     return 0;
 }

@@ -1,7 +1,7 @@
 /* Main code to programming on Kilombo Simulator
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Out 31 15:17:04
+ * Last Change: 2018 Nov 07 09:45:05
  */
 
 #include <kilombo.h>
@@ -14,8 +14,8 @@
 #include <debug.h>
 #endif
 
-#define MAXN 20                        // maximum number of neighbours
-#define MAXMSG 10                      // maximum number of stored messages
+#define MAXN 5                        // maximum number of neighbours
+#define MAXMSG 3                      // maximum number of stored messages
 #define PI 3.14159265358979323846      // definition for π
 
 // neighbor datatype
@@ -180,20 +180,6 @@ char *botinfo() {
 
     return botinfo_buffer;
 }
-
-// calculates light levels from x, y coordinates and calculate the light intensity
-// in its neighbourhood according with the light radius and the robot's current
-// distance to that
-int16_t callback_lighting(double x, double y) {
-    double light_x = 1;
-    double light_y = 1;
-    double light_radius = 1000;
-    double light_dist = sqrt(pow(x-light_x, 2) + pow(y-light_y, 2));
-
-    if(light_dist <= light_radius) return (1 - light_dist/light_radius)*1023;
-
-    return 0;
-}
 #endif
 
 /******************************************************************************
@@ -247,6 +233,10 @@ void loop() {
 
     // change the led colors according to the distance between the robots
     process_distance();
+/*    if(mydata->n_neighbors == 1) set_color(RGB(0, 3, 0));*/
+    /*else if(mydata->n_neighbors == 2) set_color(RGB(0, 0, 3));*/
+    /*else if(mydata->n_neighbors == 0) set_color(RGB(0, 0, 0));*/
+    /*else set_color(RGB(3, 0, 0));*/
 }
 
 // main function
@@ -263,19 +253,14 @@ int main(void) {
     // state of the current bot, used for the simulator status bar
     SET_CALLBACK(botinfo, botinfo);
 
-    // register a callback function to set the position of the light spot in
-    // the map and calculate the light intensity in its neighbourhood according
-    // with the light radius and the robot's current distance to that
-    SET_CALLBACK(lighting, callback_lighting);
-
-    // start kilobot event loop
-    kilo_start(setup, loop);
-
     // register message callback
     kilo_message_rx = message_rx;
 
     // register message transmission callback
     kilo_message_tx = message_tx;
+
+    // start kilobot event loop
+    kilo_start(setup, loop);
 
     return 0;
 }
