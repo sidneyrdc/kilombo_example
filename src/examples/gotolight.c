@@ -1,7 +1,7 @@
 /* Gotolight example for Kilombo Simulator
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Out 24 19:03:06
+ * Last Change: 2018 Nov 08 00:42:23
  * Info: Simulates kilobots searching for light (they move towards the light source).
  */
 
@@ -196,9 +196,6 @@ int main(void) {
     // with the light radius and the robot's current distance to that
     SET_CALLBACK(lighting, callback_lighting);
 
-    // start kilobot event loop
-    kilo_start(setup, loop);
-
     // initialize ring buffer
     RB_init();
 
@@ -207,6 +204,9 @@ int main(void) {
 
     // register message transmission callback
     kilo_message_tx = message_tx;
+
+    // start kilobot event loop
+    kilo_start(setup, loop);
 
     return 0;
 }

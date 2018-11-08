@@ -1,7 +1,7 @@
 /* Main code to programming on Kilombo Simulator
  *
  * Author: Sidney Carvalho - sydney.rdc@gmail.com
- * Last Change: 2018 Oct 22 10:00:00
+ * Last Change: 2018 Nov 08 00:41:59
  */
 
 #include <kilombo.h>
@@ -238,14 +238,14 @@ int main(void) {
     // with the light radius and the robot's current distance to that
     SET_CALLBACK(lighting, callback_lighting);
 
-    // start kilobot event loop
-    kilo_start(setup, loop);
-
     // register message callback
     kilo_message_rx = message_rx;
 
     // register message transmission callback
     kilo_message_tx = message_tx;
+
+    // start kilobot event loop
+    kilo_start(setup, loop);
 
     return 0;
 }
